@@ -11,10 +11,13 @@ spring:
             - Path=/main-service/**
 
 management:
+  endpoint:
+    gateway:
+      access: read-only
   endpoints:
     web:
       exposure:
-        include: health, metrics, mappings
+        include: health, metrics, mappings, gateway
 
 server:
   port: 8080
