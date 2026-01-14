@@ -10,11 +10,15 @@ spring:
           predicates:
             - Path=/**
 
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: health, metrics, mappings
+management:
+  endpoint:
+    gateway:
+      access: read-only
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: gateway, health, metrics, mappings
 
 server:
   port: 8080
