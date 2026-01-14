@@ -60,7 +60,7 @@ public class StatClientImpl implements StatClient {
         if (client == null) {
             try {
                 ServiceInstance instance = discoveryClient.getInstances("stats-server").getFirst();
-                String serverUrl = "https://" + instance.getHost() + ":" + instance.getPort();
+                String serverUrl = "http://" + instance.getHost() + ":" + instance.getPort();
                 DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory(serverUrl);
                 uriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.VALUES_ONLY);
                 client = RestClient.builder()
