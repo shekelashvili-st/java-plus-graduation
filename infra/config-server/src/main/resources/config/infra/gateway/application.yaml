@@ -8,16 +8,13 @@ spring:
         - id: main_service_route
           uri: lb://main-service
           predicates:
-            - Path=/main-service/**
+            - Path=/**
 
-management:
-  endpoint:
-    gateway:
-      access: read-only
-  endpoints:
-    web:
-      exposure:
-        include: health, metrics, mappings, gateway
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health, metrics, mappings
 
 server:
   port: 8080
