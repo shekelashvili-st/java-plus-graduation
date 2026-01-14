@@ -71,7 +71,7 @@
     </dependencies>
 
     <build>
-        <finalName>stats-server</finalName>
+        <finalName>stats-server-run</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

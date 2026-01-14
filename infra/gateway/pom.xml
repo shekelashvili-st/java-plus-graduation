@@ -38,7 +38,7 @@
 
 
     <build>
-        <finalName>gateway-run</finalName>
+        <finalName>gateway-server-run</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
