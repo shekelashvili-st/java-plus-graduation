@@ -1,0 +1,25 @@
+spring:
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      discovery.locator.enabled: true
+      routes:
+        - id: main_service_route
+          uri: lb://main-service
+          predicates:
+            - Path=/**
+
+management:
+  endpoint:
+    gateway:
+      access: read-only
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: gateway, health, metrics, mappings
+
+server:
+  port: 8080
+
