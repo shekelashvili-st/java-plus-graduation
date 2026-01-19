@@ -1,8 +1,8 @@
 package ru.yandex.practicum.core.main.service.comment.service;
 
-import ru.yandex.practicum.core.main.service.comment.dto.CommentDto;
-import ru.yandex.practicum.core.main.service.comment.dto.NewCommentDto;
-import ru.yandex.practicum.core.main.service.comment.dto.UpdateCommentDto;
+import ru.yandex.practicum.core.common.dto.comment.CommentDto;
+import ru.yandex.practicum.core.common.dto.comment.NewCommentDto;
+import ru.yandex.practicum.core.common.dto.comment.UpdateCommentDto;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package ru.yandex.practicum.core.main.service.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ru.yandex.practicum.core.main.service.event.dto.*;
+import ru.yandex.practicum.core.common.dto.event.*;
 
 import java.util.List;
 

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.core.main.service.request.dto.ParticipationRequestDto;
+import ru.yandex.practicum.core.common.dto.request.ParticipationRequestDto;
 import ru.yandex.practicum.core.main.service.request.service.RequestService;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package ru.yandex.practicum.core.main.service.compilation.service;
 
-import ru.yandex.practicum.core.main.service.compilation.dto.CompilationDto;
-import ru.yandex.practicum.core.main.service.compilation.dto.FindCompilationParams;
-import ru.yandex.practicum.core.main.service.compilation.dto.NewCompilationDto;
-import ru.yandex.practicum.core.main.service.compilation.dto.UpdateCompilationRequest;
+import ru.yandex.practicum.core.common.dto.compilation.CompilationDto;
+import ru.yandex.practicum.core.common.dto.compilation.FindCompilationParams;
+import ru.yandex.practicum.core.common.dto.compilation.NewCompilationDto;
+import ru.yandex.practicum.core.common.dto.compilation.UpdateCompilationRequest;
 
 import java.util.List;
 

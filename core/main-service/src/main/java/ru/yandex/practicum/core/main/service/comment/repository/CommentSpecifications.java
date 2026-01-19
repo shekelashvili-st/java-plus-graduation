@@ -42,7 +42,7 @@ public class CommentSpecifications {
             List<Predicate> ps = new ArrayList<>();
 
             if (authors != null && !authors.isEmpty()) {
-                ps.add(root.get("author").get("id").in(authors));
+                ps.add(root.get("authorId").in(authors));
             }
             if (states != null && !states.isEmpty()) {
                 ps.add(root.get("status").in(states));

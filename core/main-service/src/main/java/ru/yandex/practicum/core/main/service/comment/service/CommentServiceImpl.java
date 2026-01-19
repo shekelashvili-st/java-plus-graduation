@@ -7,9 +7,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.core.main.service.comment.dto.CommentDto;
-import ru.yandex.practicum.core.main.service.comment.dto.NewCommentDto;
-import ru.yandex.practicum.core.main.service.comment.dto.UpdateCommentDto;
+import ru.yandex.practicum.core.common.client.user.UserClient;
+import ru.yandex.practicum.core.common.dto.comment.CommentDto;
+import ru.yandex.practicum.core.common.dto.comment.NewCommentDto;
+import ru.yandex.practicum.core.common.dto.comment.UpdateCommentDto;
+import ru.yandex.practicum.core.common.dto.user.UserDto;
+import ru.yandex.practicum.core.common.exception.BadRequestException;
+import ru.yandex.practicum.core.common.exception.ConflictException;
+import ru.yandex.practicum.core.common.exception.ForbiddenException;
+import ru.yandex.practicum.core.common.exception.NotFoundException;
 import ru.yandex.practicum.core.main.service.comment.entity.Comment;
 import ru.yandex.practicum.core.main.service.comment.entity.CommentStatus;
 import ru.yandex.practicum.core.main.service.comment.mapper.CommentMapper;
@@ -18,18 +24,14 @@ import ru.yandex.practicum.core.main.service.comment.repository.CommentSpecifica
 import ru.yandex.practicum.core.main.service.event.entity.Event;
 import ru.yandex.practicum.core.main.service.event.entity.EventState;
 import ru.yandex.practicum.core.main.service.event.repository.EventRepository;
-import ru.yandex.practicum.core.main.service.exception.BadRequestException;
-import ru.yandex.practicum.core.main.service.exception.ConflictException;
-import ru.yandex.practicum.core.main.service.exception.ForbiddenException;
-import ru.yandex.practicum.core.main.service.exception.NotFoundException;
 import ru.yandex.practicum.core.main.service.request.entity.RequestStatus;
 import ru.yandex.practicum.core.main.service.request.repository.ParticipationRequestRepository;
-import ru.yandex.practicum.core.main.service.user.entity.User;
-import ru.yandex.practicum.core.main.service.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +43,7 @@ public class CommentServiceImpl implements CommentService {
     private static final DateTimeFormatter F = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final CommentRepository commentRepository;
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserClient userClient;
     private final ParticipationRequestRepository participationRequestRepository;
 
     // ===== Public =====
@@ -64,8 +66,9 @@ public class CommentServiceImpl implements CommentService {
         if (comment.getStatus() == CommentStatus.DELETED) {
             throw new NotFoundException("Comment with id=" + commentId + " was deleted");
         }
+        String authorName = userClient.getUserById(comment.getAuthorId()).getName();
 
-        return CommentMapper.toDto(comment);
+        return CommentMapper.toDto(comment, authorName);
     }
 
     // ===== Private =====
@@ -73,9 +76,9 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentDto createComment(Long authorId, Long eventId, NewCommentDto body) {
         Event event = checkEvent(eventId);
-        User author = checkAuthor(authorId);
+        UserDto author = checkAuthor(authorId);
 
-        Comment comment = CommentMapper.toEntity(body, event, author);
+        Comment comment = CommentMapper.toEntity(body, event, author.getId());
         return createCommentInternal(author, event, comment, false);
     }
 
@@ -84,13 +87,13 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto updateComment(Long eventId, Long userId, Long commentId, UpdateCommentDto body) {
         Comment comment = checkCommentAndEvent(commentId, eventId);
 
-        if (!comment.getAuthor().getId().equals(userId)) {
+        if (!comment.getAuthorId().equals(userId)) {
             throw new ForbiddenException("You can only edit your own comment");
         }
 
         comment.setText(body.getText());
         comment.setStatus(CommentStatus.UPDATED);
-        return CommentMapper.toDto(commentRepository.save(comment));
+        return CommentMapper.toDto(commentRepository.save(comment), userClient.getUserById(userId).getName());
     }
 
     @Override
@@ -98,7 +101,7 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(Long eventId, Long userId, Long commentId) {
         Comment comment = checkCommentAndEvent(commentId, eventId);
 
-        if (!comment.getAuthor().getId().equals(userId)) {
+        if (!comment.getAuthorId().equals(userId)) {
             throw new ForbiddenException("You can only delete your own comment");
         }
         comment.setStatus(CommentStatus.DELETED);
@@ -110,9 +113,9 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentDto createCommentByAdmin(Long authorId, Long eventId, NewCommentDto body) {
         Event event = checkEvent(eventId);
-        User author = checkAuthor(authorId);
+        UserDto author = checkAuthor(authorId);
 
-        Comment comment = CommentMapper.toEntity(body, event, author);
+        Comment comment = CommentMapper.toEntity(body, event, author.getId());
         return createCommentInternal(author, event, comment, true);
     }
 
@@ -147,7 +150,7 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = checkComment(commentId);
         comment.setText(body.getText());
         comment.setStatus(CommentStatus.UPDATED);
-        return CommentMapper.toDto(commentRepository.save(comment));
+        return CommentMapper.toDto(commentRepository.save(comment), userClient.getUserById(comment.getAuthorId()).getName());
     }
 
     @Override
@@ -174,9 +177,8 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new NotFoundException("Comment with id=" + commentId + " not found"));
     }
 
-    private User checkAuthor(Long authorId) {
-        return userRepository.findById(authorId)
-                .orElseThrow(() -> new NotFoundException("User with id=" + authorId + " not found"));
+    private UserDto checkAuthor(Long authorId) {
+        return userClient.getUserById(authorId);
     }
 
     private Comment checkCommentAndEvent(Long commentId, Long eventId) {
@@ -196,12 +198,17 @@ public class CommentServiceImpl implements CommentService {
         int s = size != null ? size : 10;
         Pageable pageable = PageRequest.of(f / s, s, Sort.by(Sort.Direction.DESC, "createdOn"));
 
+        List<Comment> comments = commentRepository.findAll(spec, pageable).getContent();
+        Map<Long, UserDto> commentToAuthor = userClient.getUsersById(comments.stream().map(Comment::getAuthorId).toList())
+                .stream()
+                .collect(Collectors.toMap(UserDto::getId, Function.identity()));
+
         return commentRepository.findAll(spec, pageable).stream()
-                .map(CommentMapper::toDto)
+                .map(comment -> CommentMapper.toDto(comment, commentToAuthor.get(comment.getAuthorId()).getName()))
                 .collect(Collectors.toList());
     }
 
-    private CommentDto createCommentInternal(User author, Event event, Comment comment, boolean isAdminAction) {
+    private CommentDto createCommentInternal(UserDto author, Event event, Comment comment, boolean isAdminAction) {
         if (!isAdminAction) {
             if (event.getState() != EventState.PUBLISHED && event.getState() != EventState.CANCELED) {
                 throw new ConflictException("Only PUBLISHED or CANCELED events can be commented on by users");
@@ -214,7 +221,7 @@ public class CommentServiceImpl implements CommentService {
         if (isAdminAction) {
             log.info("Admin created comment for user {} on event {}", author.getId(), event.getId());
         }
-        return CommentMapper.toDto(commentRepository.save(comment));
+        return CommentMapper.toDto(commentRepository.save(comment), author.getName());
     }
 
     private boolean isUserParticipating(Long eventId, Long userId) {

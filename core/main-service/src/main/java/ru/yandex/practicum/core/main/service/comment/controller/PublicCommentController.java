@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.core.main.service.comment.dto.CommentDto;
+import ru.yandex.practicum.core.common.dto.comment.CommentDto;
 import ru.yandex.practicum.core.main.service.comment.service.CommentService;
 
 import java.util.List;

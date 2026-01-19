@@ -6,13 +6,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.core.main.service.category.dto.CategoryDto;
-import ru.yandex.practicum.core.main.service.category.dto.NewCategoryDto;
+import ru.yandex.practicum.core.common.dto.category.CategoryDto;
+import ru.yandex.practicum.core.common.dto.category.NewCategoryDto;
+import ru.yandex.practicum.core.common.exception.ConflictException;
+import ru.yandex.practicum.core.common.exception.NotFoundException;
 import ru.yandex.practicum.core.main.service.category.entity.Category;
 import ru.yandex.practicum.core.main.service.category.mapper.CategoryMapper;
 import ru.yandex.practicum.core.main.service.category.repository.CategoryRepository;
-import ru.yandex.practicum.core.main.service.exception.ConflictException;
-import ru.yandex.practicum.core.main.service.exception.NotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -4,8 +4,8 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.core.main.service.compilation.dto.CompilationDto;
-import ru.yandex.practicum.core.main.service.compilation.dto.FindCompilationParams;
+import ru.yandex.practicum.core.common.dto.compilation.CompilationDto;
+import ru.yandex.practicum.core.common.dto.compilation.FindCompilationParams;
 import ru.yandex.practicum.core.main.service.compilation.service.CompilationService;
 
 import java.util.List;

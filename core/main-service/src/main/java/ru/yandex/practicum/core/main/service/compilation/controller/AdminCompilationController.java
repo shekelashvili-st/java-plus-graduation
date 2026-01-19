@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.core.main.service.compilation.dto.CompilationDto;
-import ru.yandex.practicum.core.main.service.compilation.dto.NewCompilationDto;
-import ru.yandex.practicum.core.main.service.compilation.dto.UpdateCompilationRequest;
+import ru.yandex.practicum.core.common.dto.compilation.CompilationDto;
+import ru.yandex.practicum.core.common.dto.compilation.NewCompilationDto;
+import ru.yandex.practicum.core.common.dto.compilation.UpdateCompilationRequest;
 import ru.yandex.practicum.core.main.service.compilation.service.CompilationService;
 
 @RestController

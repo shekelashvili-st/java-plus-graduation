@@ -1,8 +1,8 @@
 package ru.yandex.practicum.core.main.service.compilation.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.yandex.practicum.core.main.service.compilation.dto.CompilationDto;
-import ru.yandex.practicum.core.main.service.compilation.dto.NewCompilationDto;
+import ru.yandex.practicum.core.common.dto.compilation.CompilationDto;
+import ru.yandex.practicum.core.common.dto.compilation.NewCompilationDto;
 import ru.yandex.practicum.core.main.service.compilation.entity.Compilation;
 import ru.yandex.practicum.core.main.service.event.mapper.EventMapper;
 

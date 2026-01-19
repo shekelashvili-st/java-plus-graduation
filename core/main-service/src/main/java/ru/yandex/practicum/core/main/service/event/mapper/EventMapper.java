@@ -2,11 +2,11 @@ package ru.yandex.practicum.core.main.service.event.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import ru.yandex.practicum.core.common.dto.event.EventFullDto;
+import ru.yandex.practicum.core.common.dto.event.EventShortDto;
+import ru.yandex.practicum.core.common.dto.event.LocationDto;
+import ru.yandex.practicum.core.common.dto.event.NewEventDto;
 import ru.yandex.practicum.core.main.service.category.entity.Category;
-import ru.yandex.practicum.core.main.service.event.dto.EventFullDto;
-import ru.yandex.practicum.core.main.service.event.dto.EventShortDto;
-import ru.yandex.practicum.core.main.service.event.dto.LocationDto;
-import ru.yandex.practicum.core.main.service.event.dto.NewEventDto;
 import ru.yandex.practicum.core.main.service.event.entity.Event;
 import ru.yandex.practicum.core.main.service.event.entity.EventState;
 
@@ -49,7 +49,7 @@ public class EventMapper {
                 .paid(e.getPaid())
                 .participantLimit(e.getParticipantLimit())
                 .requestModeration(e.getRequestModeration())
-                .state(e.getState())
+                .state(ru.yandex.practicum.core.common.dto.event.EventState.valueOf(e.getState().toString()))
                 .views(e.getViews())
                 .build();
     }

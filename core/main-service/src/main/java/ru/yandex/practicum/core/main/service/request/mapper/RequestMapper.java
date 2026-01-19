@@ -2,7 +2,7 @@ package ru.yandex.practicum.core.main.service.request.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.core.main.service.request.dto.ParticipationRequestDto;
+import ru.yandex.practicum.core.common.dto.request.ParticipationRequestDto;
 import ru.yandex.practicum.core.main.service.request.entity.ParticipationRequest;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -13,7 +13,7 @@ public class RequestMapper {
                 .created(e.getCreated())
                 .event(e.getEventId())
                 .requester(e.getRequesterId())
-                .status(e.getStatus())
+                .status(ru.yandex.practicum.core.common.dto.request.RequestStatus.valueOf(e.getStatus().toString()))
                 .build();
     }
 }

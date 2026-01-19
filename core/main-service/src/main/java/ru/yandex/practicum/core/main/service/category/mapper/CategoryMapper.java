@@ -1,8 +1,8 @@
 package ru.yandex.practicum.core.main.service.category.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.yandex.practicum.core.main.service.category.dto.CategoryDto;
-import ru.yandex.practicum.core.main.service.category.dto.NewCategoryDto;
+import ru.yandex.practicum.core.common.dto.category.CategoryDto;
+import ru.yandex.practicum.core.common.dto.category.NewCategoryDto;
 import ru.yandex.practicum.core.main.service.category.entity.Category;
 
 @UtilityClass

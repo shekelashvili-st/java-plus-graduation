@@ -3,7 +3,6 @@ package ru.yandex.practicum.core.main.service.comment.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import ru.yandex.practicum.core.main.service.event.entity.Event;
-import ru.yandex.practicum.core.main.service.user.entity.User;
 
 import java.time.LocalDateTime;
 
@@ -22,9 +21,8 @@ public class Comment {
     @Column(length = 2000, nullable = false)
     private String text;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    private User author;
+    @Column(name = "author_id", nullable = false)
+    private Long authorId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)

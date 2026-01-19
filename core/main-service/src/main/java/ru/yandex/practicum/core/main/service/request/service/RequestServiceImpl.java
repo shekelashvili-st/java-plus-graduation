@@ -3,19 +3,19 @@ package ru.yandex.practicum.core.main.service.request.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.core.common.client.user.UserClient;
+import ru.yandex.practicum.core.common.dto.request.EventRequestStatusUpdateRequest;
+import ru.yandex.practicum.core.common.dto.request.EventRequestStatusUpdateResult;
+import ru.yandex.practicum.core.common.dto.request.ParticipationRequestDto;
+import ru.yandex.practicum.core.common.exception.ConflictException;
+import ru.yandex.practicum.core.common.exception.NotFoundException;
 import ru.yandex.practicum.core.main.service.event.entity.Event;
 import ru.yandex.practicum.core.main.service.event.entity.EventState;
 import ru.yandex.practicum.core.main.service.event.repository.EventRepository;
-import ru.yandex.practicum.core.main.service.exception.ConflictException;
-import ru.yandex.practicum.core.main.service.exception.NotFoundException;
-import ru.yandex.practicum.core.main.service.request.dto.EventRequestStatusUpdateRequest;
-import ru.yandex.practicum.core.main.service.request.dto.EventRequestStatusUpdateResult;
-import ru.yandex.practicum.core.main.service.request.dto.ParticipationRequestDto;
 import ru.yandex.practicum.core.main.service.request.entity.ParticipationRequest;
 import ru.yandex.practicum.core.main.service.request.entity.RequestStatus;
 import ru.yandex.practicum.core.main.service.request.mapper.RequestMapper;
 import ru.yandex.practicum.core.main.service.request.repository.ParticipationRequestRepository;
-import ru.yandex.practicum.core.main.service.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,12 +31,12 @@ public class RequestServiceImpl implements RequestService {
 
     private final ParticipationRequestRepository requestRepository;
     private final EventRepository eventRepository;
-    private final UserService userService;
+    private final UserClient userClient;
 
     // ----- user side -----
     @Override
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
-        userService.getUserById(userId);
+        userClient.getUserById(userId);
         return requestRepository.findByRequesterId(userId).stream()
                 .map(RequestMapper::toDto)
                 .toList();

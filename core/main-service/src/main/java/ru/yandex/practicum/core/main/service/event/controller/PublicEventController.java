@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.core.main.service.event.dto.EventFullDto;
-import ru.yandex.practicum.core.main.service.event.dto.EventShortDto;
+import ru.yandex.practicum.core.common.dto.event.EventFullDto;
+import ru.yandex.practicum.core.common.dto.event.EventShortDto;
 import ru.yandex.practicum.core.main.service.event.service.EventService;
 
 import java.util.List;

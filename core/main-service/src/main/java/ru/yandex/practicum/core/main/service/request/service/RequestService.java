@@ -1,8 +1,8 @@
 package ru.yandex.practicum.core.main.service.request.service;
 
-import ru.yandex.practicum.core.main.service.request.dto.EventRequestStatusUpdateRequest;
-import ru.yandex.practicum.core.main.service.request.dto.EventRequestStatusUpdateResult;
-import ru.yandex.practicum.core.main.service.request.dto.ParticipationRequestDto;
+import ru.yandex.practicum.core.common.dto.request.EventRequestStatusUpdateRequest;
+import ru.yandex.practicum.core.common.dto.request.EventRequestStatusUpdateResult;
+import ru.yandex.practicum.core.common.dto.request.ParticipationRequestDto;
 
 import java.util.List;
 

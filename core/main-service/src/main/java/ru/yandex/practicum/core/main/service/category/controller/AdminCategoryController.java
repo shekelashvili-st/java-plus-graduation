@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.core.main.service.category.dto.CategoryDto;
-import ru.yandex.practicum.core.main.service.category.dto.NewCategoryDto;
+import ru.yandex.practicum.core.common.dto.category.CategoryDto;
+import ru.yandex.practicum.core.common.dto.category.NewCategoryDto;
 import ru.yandex.practicum.core.main.service.category.service.CategoryService;
 
 @RestController

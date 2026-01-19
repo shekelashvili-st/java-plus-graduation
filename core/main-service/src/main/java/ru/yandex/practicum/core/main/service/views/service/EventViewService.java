@@ -3,8 +3,8 @@ package ru.yandex.practicum.core.main.service.views.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.core.common.dto.views.ViewDto;
 import ru.yandex.practicum.core.main.service.event.repository.EventRepository;
-import ru.yandex.practicum.core.main.service.views.dto.ViewDto;
 import ru.yandex.practicum.core.main.service.views.model.EventView;
 import ru.yandex.practicum.core.main.service.views.repository.EventViewRepository;
 
