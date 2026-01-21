@@ -1,7 +1,6 @@
 package ru.yandex.practicum.core.user.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.core.common.dto.user.UserDto;
 import ru.yandex.practicum.core.user.service.UserService;
@@ -11,7 +10,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/users")
-@Validated
 public class InternalUserController {
 
     private final UserService userService;
