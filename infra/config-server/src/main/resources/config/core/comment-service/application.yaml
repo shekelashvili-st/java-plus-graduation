@@ -5,6 +5,17 @@ spring:
     username: "ewm"
     password: "ewm"
   sql.init.mode: always
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 50
+        failureRateThreshold: 50
 
 logging:
   level:

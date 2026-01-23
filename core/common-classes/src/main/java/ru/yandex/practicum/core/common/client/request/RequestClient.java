@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.core.common.dto.request.RequestStatus;
 
-@FeignClient(name = "request-service", path = "/internal/requests")
+@FeignClient(name = "request-service", path = "/internal/requests", fallbackFactory = RequestClientFallbackFactory.class)
 public interface RequestClient {
     @GetMapping("/exists")
     boolean existsByEventIdAndRequesterIdAndStatus(@RequestParam Long eventId,
