@@ -34,6 +34,17 @@ The project includes the following modules:
 The core module consists of the following microservices: **Event**, **Request**, **User**, and **Comment**. Spring Cloud Feign is used for interactions between microservices (**Internal** API endpoints).
 
 Configuration files are stored in the configuration server classpath (**config/{module name}/{application name}**).
+
+## Setting up
+
+1. Build jar files with Maven:
+```bash
+mvn clean package
+```
+2. Start discovery server and config server by running the corresponding jar files.
+3. Start the rest of the services and gateway server.
+
+
 ## External API Endpoints
 
 | Endpoint                                                       | Endpoint                                   |

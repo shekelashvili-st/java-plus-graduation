@@ -36,6 +36,7 @@ public class EventViewService {
         eventViewRepository.save(view);
     }
 
+    @Transactional(readOnly = true)
     public ViewDto totalViews(Long eventId) {
         Long count = eventViewRepository.countByEventId(eventId);
         ViewDto views = new ViewDto();

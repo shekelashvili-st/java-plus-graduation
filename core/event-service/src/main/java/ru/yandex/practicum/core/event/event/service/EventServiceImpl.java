@@ -305,6 +305,7 @@ public class EventServiceImpl implements EventService {
 
     // ==== Internal ====
     @Override
+    @Transactional(readOnly = true)
     public EventInternalDto getEventById(Long id) {
         Event e = eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
