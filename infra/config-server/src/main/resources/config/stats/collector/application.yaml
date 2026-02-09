@@ -1,0 +1,15 @@
+grpc:
+  server:
+    port: 0
+spring:
+  main:
+    web-application-type: none
+
+collector:
+  kafka:
+    close-timeout: 5000ms
+    properties:
+      "bootstrap.servers": "localhost:9092"
+      "key.serializer": "org.apache.kafka.common.serialization.VoidSerializer"
+      "value.serializer": "ru.yandex.practicum.kafka.serializer.UserActionSerializer"
+    topic: "stats.user-actions.v1"

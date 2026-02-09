@@ -14,12 +14,11 @@
     <modules>
         <module>stats-client</module>
         <module>stats-dto</module>
-        <module>stats-server</module>
+        <module>serialization</module>
+        <module>collector</module>
+        <module>aggregator</module>
     </modules>
 
     <packaging>pom</packaging>
 
-    <build>
-        <finalName>stats</finalName>
-    </build>
 </project>
