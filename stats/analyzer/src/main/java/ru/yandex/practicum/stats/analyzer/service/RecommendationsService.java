@@ -2,6 +2,7 @@ package ru.yandex.practicum.stats.analyzer.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.ewm.stats.proto.SimilarEventsRequestProto;
@@ -20,12 +21,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RecommendationsService {
     private final EventSimilarityRepository eventSimilarityRepository;
     private final UserActionRepository userActionRepository;
 
     public List<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto requestProto) {
-
 
         Map<Long, Double> idToRatingInteracted = userActionRepository.findByUserIdOrderByTimestamp(requestProto.getUserId()).stream()
                 .collect(Collectors.toMap(UserAction::getEventId, UserAction::getRating));

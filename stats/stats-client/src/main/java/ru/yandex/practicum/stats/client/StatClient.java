@@ -1,16 +1,15 @@
 package ru.yandex.practicum.stats.client;
 
-import ru.yandex.practicum.stats.dto.EndpointHit;
-import ru.yandex.practicum.stats.dto.ViewStats;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 public interface StatClient {
-    void create(EndpointHit endpointHit);
+    void saveView(Long eventId, Long userId);
 
-    List<ViewStats> getStats(LocalDateTime start,
-                             LocalDateTime end,
-                             List<String> uris,
-                             boolean unique);
+    void saveLike(Long eventId, Long userId);
+
+    void saveRequest(Long eventId, Long userId);
+
+    Map<Long, Double> fetchScore(Iterable<Long> ids);
+
+    Map<Long, Double> fetchRecommendations(Long userId, Long maxResults);
 }

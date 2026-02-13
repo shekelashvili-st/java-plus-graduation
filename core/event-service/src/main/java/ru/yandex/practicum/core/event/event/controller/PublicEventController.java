@@ -1,6 +1,5 @@
 package ru.yandex.practicum.core.event.event.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +20,17 @@ public class PublicEventController {
 
     private final EventService eventService;
 
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId,
+                                                  @RequestParam(defaultValue = "1") Long maxResults) {
+        return eventService.getRecommendations(userId, maxResults);
+    }
+
+    @PostMapping("/{eventId}/like")
+    public void likeEvent(@PathVariable Long eventId, @RequestHeader("X-EWM-USER-ID") long userId) {
+        eventService.likeEvent(userId, eventId);
+    }
+
     @GetMapping
     public List<EventShortDto> getAllPublicEvents(
             @RequestParam(required = false) String text,
@@ -32,17 +42,16 @@ public class PublicEventController {
             @Pattern(regexp = "EVENT_DATE|VIEWS", message = "sort must be EVENT_DATE or VIEWS")
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") Integer from,
-            @RequestParam(defaultValue = "10") Integer size,
-            HttpServletRequest request
+            @RequestParam(defaultValue = "10") Integer size
     ) {
         List<EventShortDto> newList = eventService.getAllPublicEvents(text, categories, paid,
-                rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);
+                rangeStart, rangeEnd, onlyAvailable, sort, from, size);
         return newList;
     }
 
     @GetMapping("/{eventId}")
-    public EventFullDto getPublishedEventById(@PathVariable Long eventId, HttpServletRequest request) {
-        EventFullDto newdto = eventService.getPublishedEventById(eventId, request);
+    public EventFullDto getPublishedEventById(@PathVariable Long eventId, @RequestHeader("X-EWM-USER-ID") long userId) {
+        EventFullDto newdto = eventService.getPublishedEventById(eventId, userId);
         return newdto;
     }
 }

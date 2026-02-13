@@ -1,6 +1,7 @@
 package ru.yandex.practicum.core.request.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.core.common.client.event.EventClient;
@@ -16,6 +17,7 @@ import ru.yandex.practicum.core.request.entity.ParticipationRequest;
 import ru.yandex.practicum.core.request.entity.RequestStatus;
 import ru.yandex.practicum.core.request.mapper.RequestMapper;
 import ru.yandex.practicum.core.request.repository.ParticipationRequestRepository;
+import ru.yandex.practicum.stats.client.StatClient;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,12 +28,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class RequestServiceImpl implements RequestService {
 
     private final ParticipationRequestRepository requestRepository;
     private final EventClient eventClient;
     private final UserClient userClient;
+    private final StatClient statClient;
 
     // ----- user side -----
     @Override
@@ -76,6 +80,8 @@ public class RequestServiceImpl implements RequestService {
                         .created(LocalDateTime.now())
                         .build()
         );
+
+        saveRequest(eventId, userId);
         return RequestMapper.toDto(saved);
     }
 
@@ -187,5 +193,13 @@ public class RequestServiceImpl implements RequestService {
             throw new NotFoundException("Event with id=" + eventId + " was not found");
         }
         return e;
+    }
+
+    private void saveRequest(Long eventId, Long userId) {
+        try {
+            statClient.saveRequest(eventId, userId);
+        } catch (Exception ex) {
+            log.warn("StatService save request failed: {}", ex.getMessage());
+        }
     }
 }
