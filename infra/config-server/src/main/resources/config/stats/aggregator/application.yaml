@@ -1,7 +1,3 @@
-spring:
-  main:
-    web-application-type: none
-
 server:
   port: 0
 
@@ -21,7 +17,7 @@ aggregator:
       properties:
         "bootstrap.servers": ${aggregator.kafka.bootstrap-servers}
         "enable.auto.commit": false
-        "group.id": "telemetry.aggregator.group"
+        "group.id": "stats.aggregator.group"
         "client.id": "aggregator.group.main"
         "key.deserializer": "org.apache.kafka.common.serialization.VoidDeserializer"
         "value.deserializer": "ru.yandex.practicum.kafka.serializer.UserActionDeserializer"
