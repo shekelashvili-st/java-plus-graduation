@@ -34,15 +34,15 @@ public class RecommendationsService {
             return null;
         }
 
-        List<Long> suggestedEventIds = new ArrayList<>();
+        Map<Long, List<EventSimilarity>> suggestedEventIds = new HashMap<>();
         List<EventSimilarity> eventSimilarities = eventSimilarityRepository.findByEventAInOrEventBInOrderByScoreDesc(idToRatingInteracted.keySet());
         long size = 0;
         for (var sim : eventSimilarities) {
             if (!idToRatingInteracted.containsKey(sim.getEventA())) {
-                suggestedEventIds.add(sim.getEventA());
+                suggestedEventIds.put(sim.getEventA(), new ArrayList<>());
                 size += 1;
             } else if (!idToRatingInteracted.containsKey(sim.getEventB())) {
-                suggestedEventIds.add(sim.getEventB());
+                suggestedEventIds.put(sim.getEventB(), new ArrayList<>());
                 size += 1;
             }
             if (size >= requestProto.getMaxResults()) {
@@ -51,24 +51,33 @@ public class RecommendationsService {
         }
 
         List<RecommendedEventProto> recommendedEvents = new ArrayList<>();
-        for (var id : suggestedEventIds) {
-            List<EventSimilarity> eventSimilaritiesForRec = eventSimilarityRepository.findByEventAIsOrEventBIsOrderByScoreDesc(id);
+        eventSimilarityRepository.findByEventAInOrEventBInOrderByScoreDesc(suggestedEventIds.keySet())
+                .forEach((sim) -> {
+                    List<EventSimilarity> eventAList = suggestedEventIds.get(sim.getEventA());
+                    List<EventSimilarity> eventBList = suggestedEventIds.get(sim.getEventB());
+                    if (eventAList != null) {
+                        eventAList.add(sim);
+                    }
+                    if (eventBList != null) {
+                        eventBList.add(sim);
+                    }
+                });
+
+        for (var entry : suggestedEventIds.entrySet()) {
+            List<EventSimilarity> eventSimilaritiesForRec = entry.getValue();
             double numerator = 0D;
             double denominator = 0D;
-            long sizeForRec = 0;
             for (var sim : eventSimilaritiesForRec) {
                 if (idToRatingInteracted.containsKey(sim.getEventA())) {
                     numerator += sim.getScore() * idToRatingInteracted.get(sim.getEventA());
                     denominator += sim.getScore();
-                    sizeForRec += 1;
                 } else if (idToRatingInteracted.containsKey(sim.getEventB())) {
                     numerator += sim.getScore() * idToRatingInteracted.get(sim.getEventB());
                     denominator += sim.getScore();
-                    sizeForRec += 1;
                 }
             }
             recommendedEvents.add(RecommendedEventProto.newBuilder()
-                    .setEventId(id)
+                    .setEventId(entry.getKey())
                     .setScore(denominator == 0D ? 0D : numerator / denominator)
                     .build());
         }

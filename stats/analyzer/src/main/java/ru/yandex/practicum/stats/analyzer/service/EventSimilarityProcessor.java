@@ -8,15 +8,11 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.yandex.practicum.stats.analyzer.config.KafkaConfig;
-import ru.yandex.practicum.stats.analyzer.mapper.EventSimilarityMapper;
-import ru.yandex.practicum.stats.analyzer.model.EventSimilarity;
 import ru.yandex.practicum.stats.analyzer.storage.EventSimilarityRepository;
 
 import java.time.Duration;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -24,16 +20,16 @@ public class EventSimilarityProcessor implements Runnable {
 
     private final KafkaConfig.ConsumerConfig config;
     private final KafkaConfig.ActionWeight actionWeight;
+    private final EventSimilarityService service;
     private final Duration closeTimeout;
-    private final EventSimilarityRepository eventSimilarityRepository;
     private Consumer<Void, EventSimilarityAvro> consumer;
 
     @Autowired
-    public EventSimilarityProcessor(KafkaConfig kafkaConfig, EventSimilarityRepository eventSimilarityRepository) {
+    public EventSimilarityProcessor(KafkaConfig kafkaConfig, EventSimilarityRepository eventSimilarityRepository, EventSimilarityService service) {
         config = kafkaConfig.getConsumers().get(getClass().getSimpleName());
         actionWeight = kafkaConfig.getActionWeight();
         closeTimeout = kafkaConfig.getCloseTimeout();
-        this.eventSimilarityRepository = eventSimilarityRepository;
+        this.service = service;
     }
 
     @Override
@@ -46,7 +42,7 @@ public class EventSimilarityProcessor implements Runnable {
                 ConsumerRecords<Void, EventSimilarityAvro> records = consumer.poll(config.getPollTimeout());
                 for (ConsumerRecord<Void, EventSimilarityAvro> record : records) {
                     // обрабатываем очередную запись
-                    handleRecord(record);
+                    service.handleRecord(record);
                 }
                 consumer.commitSync();
             }
@@ -67,18 +63,5 @@ public class EventSimilarityProcessor implements Runnable {
 
     private void initConsumer() {
         consumer = new KafkaConsumer<>(config.getProperties());
-    }
-
-    @Transactional
-    private void handleRecord(ConsumerRecord<Void, EventSimilarityAvro> record) {
-        EventSimilarity eventSimilarity = EventSimilarityMapper.avroToModel(record.value());
-        log.info("Получена информация о схожести:\n{}", eventSimilarity);
-        Optional<EventSimilarity> eventSimilarityInDb = eventSimilarityRepository.findByEventAAndEventB(eventSimilarity.getEventA(), eventSimilarity.getEventB());
-        eventSimilarityInDb.ifPresent(inDb -> {
-            log.trace("В базе данных уже была информация о схожести, она будет заменена:\n{}", inDb);
-            eventSimilarity.setId(inDb.getId());
-        });
-        eventSimilarityRepository.save(eventSimilarity);
-        log.info("Обновлены данные в базе:\n{}", eventSimilarity);
     }
 }
