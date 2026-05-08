@@ -28,7 +28,6 @@ public class EventMapper {
                 .participantLimit(dto.getParticipantLimit() == null ? 0 : dto.getParticipantLimit())
                 .requestModeration(dto.getRequestModeration() == null || dto.getRequestModeration())
                 .state(EventState.PENDING)
-                .views(0L)
                 .category(category)
                 .initiatorId(initiatorId)
                 .build();
@@ -48,7 +47,6 @@ public class EventMapper {
                 .participantLimit(e.getParticipantLimit())
                 .requestModeration(e.getRequestModeration())
                 .state(ru.yandex.practicum.core.common.dto.event.EventState.valueOf(e.getState().toString()))
-                .views(e.getViews())
                 .build();
     }
 
@@ -59,7 +57,6 @@ public class EventMapper {
                 .annotation(e.getAnnotation())
                 .eventDate(e.getEventDate())
                 .paid(e.getPaid())
-                .views(e.getViews())
                 .build();
     }
 

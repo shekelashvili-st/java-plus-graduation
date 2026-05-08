@@ -1,17 +1,13 @@
 package ru.yandex.practicum.core.event.event.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import ru.yandex.practicum.core.common.client.request.RequestClient;
 import ru.yandex.practicum.core.common.dto.category.CategoryDto;
 import ru.yandex.practicum.core.common.dto.event.*;
@@ -28,10 +24,7 @@ import ru.yandex.practicum.core.event.event.entity.EventState;
 import ru.yandex.practicum.core.event.event.mapper.EventMapper;
 import ru.yandex.practicum.core.event.event.repository.EventRepository;
 import ru.yandex.practicum.core.event.event.repository.EventSpecifications;
-import ru.yandex.practicum.core.event.views.service.EventViewService;
 import ru.yandex.practicum.stats.client.StatClient;
-import ru.yandex.practicum.stats.dto.EndpointHit;
-import ru.yandex.practicum.stats.dto.ViewStats;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,12 +41,35 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final RequestClient requestClient;
-    private final EventViewService eventViewService;
     private final StatClient statClient;
-    @Value("${app.name:ewm-main}")
-    private String appName;
 
     // ===== Public =====
+
+    @Override
+    public List<EventShortDto> getRecommendations(Long userId, Long maxResults) {
+        Map<Long, Double> recommendedIdsToScore = statClient.fetchRecommendations(userId, maxResults);
+        List<Event> events = eventRepository.findAllById(recommendedIdsToScore.keySet());
+
+        Map<Long, Double> ratingByEvent = fetchRating(events);
+
+        return events.stream()
+                .map(e -> toShortDtoRich(e, ratingByEvent.getOrDefault(e.getId(), 0D)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void likeEvent(Long userId, Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        boolean hasRequest = requestClient.existsByEventIdAndRequesterIdAndStatus(eventId, userId, RequestStatus.CONFIRMED);
+        if (!((event.getState() == EventState.PUBLISHED)
+                && hasRequest
+                && event.getEventDate().isBefore(LocalDateTime.now()))) {
+            throw new BadRequestException("User hasn't participated in the event");
+        }
+        statClient.saveLike(eventId, userId);
+    }
+
     @Override
     public List<EventShortDto> getAllPublicEvents(String text,
                                                   List<Long> categories,
@@ -63,9 +79,7 @@ public class EventServiceImpl implements EventService {
                                                   Boolean onlyAvailable,
                                                   String sort,
                                                   Integer from,
-                                                  Integer size,
-                                                  HttpServletRequest request) {
-        saveHit(request);
+                                                  Integer size) {
 
         LocalDateTime start = parse(rangeStart);
         LocalDateTime end = parse(rangeEnd);
@@ -88,13 +102,13 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
-        Map<Long, Long> viewsByEvent = fetchViews(events);
+        Map<Long, Double> ratingByEvent = fetchRating(events);
 
         String sortMode = (sort == null) ? "EVENT_DATE" : sort.toUpperCase(Locale.ROOT);
         Comparator<Event> byDate = Comparator.comparing(Event::getEventDate);
         if ("VIEWS".equals(sortMode)) {
             Comparator<Event> byViewsDesc = Comparator
-                    .comparing((Event e) -> viewsByEvent.getOrDefault(e.getId(), 0L))
+                    .comparing((Event e) -> ratingByEvent.getOrDefault(e.getId(), 0D))
                     .reversed()
                     .thenComparing(byDate);
             events.sort(byViewsDesc);
@@ -108,21 +122,19 @@ public class EventServiceImpl implements EventService {
         if (f >= events.size()) return List.of();
 
         return events.subList(f, to).stream()
-                .map(e -> toShortDtoRich(e, viewsByEvent.getOrDefault(e.getId(), 0L)))
+                .map(e -> toShortDtoRich(e, ratingByEvent.getOrDefault(e.getId(), 0D)))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public EventFullDto getPublishedEventById(Long eventId, HttpServletRequest request) {
+    public EventFullDto getPublishedEventById(Long eventId, Long userId) {
         Event e = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        eventViewService.increaseViews(eventId, request.getRemoteHost());
+        saveView(eventId, userId);
 
-        saveHit(request);
-
-        Map<Long, Long> views = fetchViews(List.of(e));
-        return toFullDtoRich(e, views.getOrDefault(e.getId(), 0L));
+        Map<Long, Double> rating = fetchRating(List.of(e));
+        return toFullDtoRich(e, rating.getOrDefault(e.getId(), 0D));
     }
 
     // ===== Private =====
@@ -136,10 +148,10 @@ public class EventServiceImpl implements EventService {
         Page<Event> pageObj = eventRepository.findByInitiatorId(userId, pageable);
         List<Event> events = pageObj.getContent();
 
-        Map<Long, Long> viewsByEvent = fetchViews(events);
+        Map<Long, Double> ratingByEvent = fetchRating(events);
 
         return events.stream()
-                .map(e -> toShortDtoRich(e, viewsByEvent.getOrDefault(e.getId(), 0L)))
+                .map(e -> toShortDtoRich(e, ratingByEvent.getOrDefault(e.getId(), 0D)))
                 .collect(Collectors.toList());
     }
 
@@ -156,14 +168,14 @@ public class EventServiceImpl implements EventService {
 
         Event preSaved = EventMapper.toEntity(body, category, userId);
 
-        return toFullDtoRich(eventRepository.save(preSaved), 0L);
+        return toFullDtoRich(eventRepository.save(preSaved), 0D);
     }
 
     @Override
     public EventFullDto getEventByUser(Long userId, Long eventId) {
         Event e = getUserEventOrThrow(userId, eventId);
-        Map<Long, Long> views = fetchViews(List.of(e));
-        return toFullDtoRich(e, views.getOrDefault(e.getId(), 0L));
+        Map<Long, Double> rating = fetchRating(List.of(e));
+        return toFullDtoRich(e, rating.getOrDefault(e.getId(), 0D));
     }
 
     @Override
@@ -209,8 +221,8 @@ public class EventServiceImpl implements EventService {
         }
 
         Event saved = eventRepository.save(e);
-        Map<Long, Long> views = fetchViews(List.of(saved));
-        return toFullDtoRich(saved, views.getOrDefault(saved.getId(), 0L));
+        Map<Long, Double> rating = fetchRating(List.of(saved));
+        return toFullDtoRich(saved, rating.getOrDefault(saved.getId(), 0D));
     }
 
     // ===== Admin =====
@@ -240,10 +252,10 @@ public class EventServiceImpl implements EventService {
         int to = Math.min(events.size(), f + s);
         if (f >= events.size()) return List.of();
 
-        Map<Long, Long> viewsByEvent = fetchViews(events.subList(f, to));
+        Map<Long, Double> ratingByEvent = fetchRating(events.subList(f, to));
 
         return events.subList(f, to).stream()
-                .map(e -> toFullDtoRich(e, viewsByEvent.getOrDefault(e.getId(), 0L)))
+                .map(e -> toFullDtoRich(e, ratingByEvent.getOrDefault(e.getId(), 0D)))
                 .collect(Collectors.toList());
     }
 
@@ -299,8 +311,8 @@ public class EventServiceImpl implements EventService {
         }
 
         Event saved = eventRepository.save(e);
-        Map<Long, Long> views = fetchViews(List.of(saved));
-        return toFullDtoRich(saved, views.getOrDefault(saved.getId(), 0L));
+        Map<Long, Double> rating = fetchRating(List.of(saved));
+        return toFullDtoRich(saved, rating.getOrDefault(saved.getId(), 0D));
     }
 
     // ==== Internal ====
@@ -342,22 +354,22 @@ public class EventServiceImpl implements EventService {
         return requestClient.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
     }
 
-    private EventFullDto toFullDtoRich(Event e, long views) {
+    private EventFullDto toFullDtoRich(Event e, Double rating) {
         EventFullDto dto = EventMapper.toFullDto(e);
         CategoryDto cat = CategoryMapper.toDto(e.getCategory());
         dto.setCategory(cat);
         dto.setInitiator(buildInitiator(e.getInitiatorId()));
         dto.setConfirmedRequests(getConfirmedCount(e.getId()));
-        dto.setViews(e.getViews());
+        dto.setRating(rating);
         return dto;
     }
 
-    private EventShortDto toShortDtoRich(Event e, long views) {
+    private EventShortDto toShortDtoRich(Event e, Double rating) {
         EventShortDto dto = EventMapper.toShortDto(e);
         dto.setCategory(CategoryMapper.toDto(e.getCategory()));
         dto.setInitiator(buildInitiator(e.getInitiatorId()));
         dto.setConfirmedRequests(getConfirmedCount(e.getId()));
-        dto.setViews(views);
+        dto.setRating(rating);
         return dto;
     }
 
@@ -366,64 +378,21 @@ public class EventServiceImpl implements EventService {
     }
 
     // ===== Stats =====
-    private void saveHit(HttpServletRequest request) {
+    private void saveView(Long eventId, Long userId) {
         try {
-            if (request == null) return;
-
-            String uri = request.getRequestURI();
-            String ip = clientIp(request);
-            statClient.create(new EndpointHit(appName, uri, ip, LocalDateTime.now()));
+            statClient.saveView(eventId, userId);
         } catch (Exception ex) {
-            log.warn("StatService hit failed: {}", ex.getMessage());
+            log.warn("StatService save view failed: {}", ex.getMessage());
         }
     }
 
-    private Map<Long, Long> fetchViews(List<Event> events) {
+    private Map<Long, Double> fetchRating(List<Event> events) {
         if (events == null || events.isEmpty()) return Map.of();
-
-        LocalDateTime start = events.stream()
-                .map(e -> Optional.ofNullable(e.getPublishedOn()).orElse(e.getCreatedOn()))
-                .filter(Objects::nonNull)
-                .min(LocalDateTime::compareTo)
-                .orElse(LocalDateTime.now());
-
-        List<String> uris = events.stream()
-                .map(e -> "/events/" + e.getId())
-                .distinct()
-                .toList();
-
         try {
-            List<ViewStats> stats = statClient.getStats(start, LocalDateTime.now(), uris, true);
-            Map<String, Long> hitsByUri = stats == null ? Map.of() :
-                    stats.stream().collect(Collectors.toMap(
-                            ViewStats::getUri,
-                            s -> (long) s.getHits(),
-                            Long::sum
-                    ));
-
-            Map<Long, Long> result = new HashMap<>();
-            for (Event e : events) {
-                long v = hitsByUri.getOrDefault("/events/" + e.getId(), 0L);
-                result.put(e.getId(), v);
-            }
-            return result;
+            return statClient.fetchScore(events.stream().map(Event::getId).toList());
         } catch (Exception ex) {
-            log.warn("StatService getStats failed: {}", ex.getMessage());
-            return events.stream().collect(Collectors.toMap(Event::getId, e -> 0L));
+            log.warn("StatService fetchRating failed: {}", ex.getMessage());
+            return events.stream().collect(Collectors.toMap(Event::getId, e -> 0D));
         }
-    }
-
-    private HttpServletRequest currentRequest() {
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        return attrs != null ? attrs.getRequest() : null;
-    }
-
-    private String clientIp(HttpServletRequest req) {
-        String xff = req.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            int comma = xff.indexOf(',');
-            return comma > 0 ? xff.substring(0, comma).trim() : xff.trim();
-        }
-        return req.getRemoteAddr();
     }
 }

@@ -59,9 +59,6 @@ public class Event {
     @Builder.Default
     private EventState state = EventState.PENDING;
 
-    @Column(nullable = false)
-    private long views;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

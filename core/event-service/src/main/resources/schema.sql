@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS events (
                                       request_moderation BOOLEAN DEFAULT TRUE,
                                       state VARCHAR(20) DEFAULT 'PENDING'
                                           CHECK (state IN ('PENDING', 'PUBLISHED', 'CANCELED')),
-                                      views BIGINT DEFAULT 0,
                                       category_id BIGINT NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
                                       initiator_id BIGINT NOT NULL
 );

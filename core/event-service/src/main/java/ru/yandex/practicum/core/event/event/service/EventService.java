@@ -1,18 +1,20 @@
 package ru.yandex.practicum.core.event.event.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import ru.yandex.practicum.core.common.dto.event.*;
 
 import java.util.List;
 
 public interface EventService {
+    List<EventShortDto> getRecommendations(Long userId, Long maxResults);
+
+    void likeEvent(Long userId, Long eventId);
+
     // ===== Public =====
     List<EventShortDto> getAllPublicEvents(String text, List<Long> categories,
                                            Boolean paid, String rangeStart, String rangeEnd,
-                                           Boolean onlyAvailable, String sort, Integer from, Integer size,
-                                           HttpServletRequest request);
+                                           Boolean onlyAvailable, String sort, Integer from, Integer size);
 
-    EventFullDto getPublishedEventById(Long eventId, HttpServletRequest request);
+    EventFullDto getPublishedEventById(Long eventId, Long userId);
 
     // ===== Private =====
     List<EventShortDto> getUserEvents(Long userId, Integer from, Integer size);
